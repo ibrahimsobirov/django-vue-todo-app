@@ -1,0 +1,16 @@
+myvenv/
+venv/
+
+
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3  # Your local database file
+
+
+node_modules/
+dist/
+.env.local
+.DS_Store
