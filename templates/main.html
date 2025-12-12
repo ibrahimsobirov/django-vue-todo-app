@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Todo App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" media="screen" href="{% static 'styles/main.css' %}">
+    <link rel="stylesheet" href="https://cdn.iconmonstr.com/1.3.0/css/iconmonstr-iconic-font.min.css">
+    <link rel="stylesheet" href="uikit/styles/uikit.css" />
+    <link rel="stylesheet" href="{% static 'styles/app.css' %}"
+    
+</head>
+<body>
+    
+    {% include 'navbar.html' %}
+    {% block content %}
+    {% endblock %}
+
+</body>
+</html>
+
