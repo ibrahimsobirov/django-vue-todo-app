@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .completed-task {
+            text-decoration: line-through;
+            color: gray;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>My To-Do List</h1>
+
+    <a href="{% url 'create' %}">Add New Task</a>
+
+    {% if tasks %}
+        <ul>
+        {% for task in tasks %}
+            <li class="{% if task.is_completed %}completed-task{% endif %}">
+                <a href="{% url 'details' task.id %}">{{ task.title }}</a>
+            </li>
+        {% endfor %}
+        </ul>
+    {% else %}
+        <p>No tasks found. Click "Add New Task" to get started!</p>
+    {% endif %}
+
+</body>
+</html>

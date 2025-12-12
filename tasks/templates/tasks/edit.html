@@ -1,0 +1,23 @@
+<h1>Edit Task: {{ task.title }}</h1>
+
+<form method="POST">
+    {% csrf_token %} 
+    
+    <label for="title-input">Title:</label>
+    <input type="text" name="title" id="title-input" value="{{ task.title }}" required>
+    <br><br>
+
+    <label for="description-input">Description (Optional):</label>
+    <textarea name="description" id="description-input">{{ task.description }}</textarea>
+    <br><br>
+
+    <label for="completed-checkbox">
+        <input type="checkbox" name="is_completed" id="completed-checkbox" {% if task.is_completed %}checked{% endif %}>
+        Mark as Completed
+    </label>
+    <br><br>
+    
+    <button type="submit">Save Changes</button>
+</form>
+
+<p><a href="{% url 'details' task.id %}">Cancel (Back to Details)</a></p>
