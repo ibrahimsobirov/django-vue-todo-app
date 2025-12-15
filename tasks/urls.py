@@ -3,8 +3,11 @@ from . import views
 
 urlpatterns = [
     path('', views.list, name='list'),
-    path('create/', views.task, name='create'),
-    path('<int:task_id>/', views.detail, name='details'),
-    path('<int:task_id>/edit/', views.edit, name='edit'),
-    path('<int:task_id>/delete/', views.delete, name='delete'), 
+]
+
+
+
+urlpatterns += [
+    path('api/tasks/', views.api_get_list, name='api_get_list'),
+    path('api/tasks/create/', views.api_task_create, name='api_task_create'),
 ]
