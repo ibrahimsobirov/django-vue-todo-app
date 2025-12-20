@@ -38,3 +38,46 @@ def api_task_create(request):
         }
     })
 
+
+def api_task_update(request, task_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+    
+    data = json.loads(request.body)
+    task = get_object_or_404(Task, id=task_id)
+    task.title = data.get('title', task.title)
+    task.description = data.get('description', task.description)
+    task.save()
+
+    return JsonResponse({
+        'status': 'success',
+        'task': {
+            'id': task.id,
+            'title': task.title,
+            'description': task.description,
+            'is_completed': task.is_completed,
+        }
+    })
+
+
+def api_task_delete(request, task_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+    task = get_object_or_404(Task, id=task_id)
+    task.delete()
+    return JsonResponse({'status': 'success'})
+
+
+def api_task_toggle(request, task_id):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+    
+    task = get_object_or_404(Task, id=task_id)
+    task.is_completed = not task.is_completed
+    task.save()
+
+    return JsonResponse({
+        'status': 'success',
+        'is_completed': task.is_completed,
+    })
