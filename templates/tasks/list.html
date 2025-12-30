@@ -15,6 +15,14 @@
 </head>
 <body>
 
+{% if user.is_authenticated %}
+
+    <div class="text-end mb-3">
+        <span class="me-3">Hello, {{ user.username }}</span>
+        <a href="{% url 'logout' %}" class="btn btn-outline-secondary btn-sm">Logout</a>
+    </div>
+    
+{% endif %}
 
     <div id="app" class="container">
 
