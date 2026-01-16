@@ -1,9 +1,12 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <title>To-Do List</title>
     {% load static %}
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
     <style>
@@ -11,18 +14,27 @@
             text-decoration: line-through;
             color: gray;
         }
+
+        .task-thumb {
+            width: 56px;
+            height: 56px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            flex: 0 0 auto;
+        }
     </style>
 </head>
+
 <body>
 
-{% if user.is_authenticated %}
+    {% if user.is_authenticated %}
 
     <div class="text-end mb-3">
-        <span class="me-3">Hello, {{ user.username }}</span>
+        <span class="me-3">{{ user.username }}</span>
         <a href="{% url 'logout' %}" class="btn btn-outline-secondary btn-sm">Logout</a>
     </div>
     
-{% endif %}
+    {% endif %}
 
     <div id="app" class="container">
 
@@ -35,71 +47,101 @@
         </div>
 
 
-        <ul class="list-group">
-            <li v-for="task in tasks" class="list-group-item">
-                <span>[[ task.title ]]</span>
-                <span class="mx-2"></span>
-                <span v-if="task.is_completed" class="badge bg-success">Completed</span>
-                <span v-else class="badge bg-warning">Pending</span>
-                <span :class="{'is_completed': task.is_completed}" @click="toggleTask(task)">[[ task.title ]]</span>
-                <div>
-                    <button @click="openEdit(task)">Edit</button>
-                    <button @click="deleteTask(task)">Delete</button>
-                </div>
-            </li>
-        </ul>
-
-
-        <div class="modal" tabindex="-1" id="createTaskModal">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Title</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <label class="form-label d-block mb-2">
-                        Task Title
-                        <input type="text" class="form-control" v-model="title">
-                    </label>
-                    <label class="form-label d-block">
-                        Task Description
-                        <textarea name="" id="" class="form-control" v-model="description"></textarea>
-                    </label>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" @click="createTask" class="btn btn-primary">Create Task</button>
-                </div>
+        <div class="row">
+            <div v-for="task in tasks" class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-2">
+                            <img v-if="task.thumbnail" :src="task.thumbnail" :alt="task.title" class="task-thumb me-2">
+                            <h5 class="card-title mb-0 flex-grow-1">
+                                <span :class="{'text-decoration-line-through text-muted': task.is_completed}">[[ task.title ]]</span>
+                            </h5>
+                        </div>
+                        <p class="card-text" v-if="task.description">[[ task.description ]]</p>
+                        <div class="mb-2">
+                            <span v-if="task.is_completed" class="badge bg-success">Completed</span>
+                            <span v-else class="badge bg-warning">Pending</span>
+                        </div>
+                        <div class="btn-group btn-group-sm">
+                            <button @click="toggleTask(task)" class="btn btn-outline-primary">Toggle</button>
+                            <button @click="openEdit(task)" class="btn btn-outline-secondary">Edit</button>
+                            <button @click="deleteTask(task)" class="btn btn-outline-danger">Delete</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
 
+        <div class="modal fade" id="createTaskModal" tabindex="-1" aria-labelledby="createTaskModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="createTaskModalLabel">Add New Task</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form @submit.prevent="createTask" enctype="multipart/form-data">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="taskTitle" class="form-label">Title</label>
+                                <input type="text" class="form-control" id="taskTitle" v-model="newTask.title" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="taskDescription" class="form-label">Description</label>
+                                <textarea class="form-control" id="taskDescription" v-model="newTask.description" rows="3"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="taskImage" class="form-label">Task Photos (Optional)</label>
+                                <input type="file" class="form-control" id="taskImage" @change="handleImages" accept="image/*" multiple>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Create Task</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
+
         <div class="modal" tabindex="-1" id="editTaskModal">
             <div class="modal-dialog">
                 <div class="modal-content">
-                <div class="modal-header">
-                    <h5>Edit task</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <label class="form-label d-block mb-2">
-                        Task Title
-                        <input type="text" class="form-control" v-model="editTitle">
-                    </label>
-                    <label class="form-label d-block">
-                        Task Description
-                        <textarea name="" id="" class="form-control" v-model="editDescription"></textarea>
-                    </label>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" @click="updateTask" class="btn btn-primary">Save</button>
-                </div>
+                    <div class="modal-header">
+                        <h5>Edit task</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="form-label d-block mb-2">
+                            Task Title
+                            <input type="text" class="form-control" v-model="editTitle">
+                        </label>
+                        <label class="form-label d-block mb-2">
+                            Task Description
+                            <textarea name="" id="" class="form-control" v-model="editDescription"></textarea>
+                        </label>
+                        <div class="mb-3">
+                            <label class="form-label d-block">Task Image</label>
+                            <div v-if="editingTask && editingTask.thumbnail" class="mb-2">
+                                <img :src="editingTask.thumbnail" :alt="editingTask.title" class="task-thumb mb-2">
+                                <div class="small text-muted" v-if="editingTask.images && editingTask.images.length">
+                                    [[ editingTask.images.length ]] photo(s)
+                                </div>
+                                <button type="button" @click="removeImage" class="btn btn-sm btn-outline-danger mt-2">Remove Photos</button>
+                            </div>
+                            <input type="file" class="form-control" @change="handleEditImages" accept="image/*" multiple>
+                            <small class="text-muted">Leave empty to keep current photos</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" @click="updateTask" class="btn btn-primary">Save</button>
+                    </div>
                 </div>
             </div>
-        </div> 
+        </div>
 
 
     </div>
@@ -116,112 +158,266 @@
 
 
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
     <script>
-    const appConfig = {
-        delimiters: ['[[', ']]'],
-
-        data() {
-            return {
-                csrfToken: '{{ csrf_token }}',
-                tasks: [],
-
-                title: '',
-                description: '',
-                editingTask: null,
-                editTitle: '',
-                editDescription: '',
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
             }
-        },
-        methods: {
-            createTask() {
-                fetch('/api/tasks/create/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': this.csrfToken,
-                    },
-                    body: JSON.stringify({
-                        title: this.title,
-                        description: this.description,
-                    })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status == 'success') {
-                        this.tasks.unshift(data.task)
-                        this.title = ''
-                        this.description = ''
-                    }
-                })
-            },
-
-            
-            deleteTask(task) {
-                fetch(`/api/tasks/${task.id}/delete/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': this.csrfToken,
-                    }
-                })
-                .then(() => {
-                    this.tasks = this.tasks.filter(t => t.id !== task.id)
-                })
-            },
-
-            toggleTask(task) {
-                fetch(`/api/tasks/${task.id}/toggle/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': this.csrfToken,
-                    }
-                })
-                .then(res => res.json())
-                .then(data => {
-                    task.is_completed = data.is_completed
-                })
-            },
-
-            openEdit(task) {
-                this.editingTask = task
-                this.editTitle = task.title
-                this.editDescription = task.description
-
-                new bootstrap.Modal(document.getElementById('editTaskModal')).show()
-            },
-
-            updateTask() {
-                fetch(`/api/tasks/${this.editingTask.id}/update/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': this.csrfToken,
-                    },
-                    body: JSON.stringify({
-                        title: this.editTitle,
-                        description: this.editDescription,
-                    })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    Object.assign(this.editingTask, data.task)
-                    bootstrap.Modal.getInstance(
-                        document.getElementById('editTaskModal')
-                    ).hide()
-                })
-            }
-        },
-        mounted() {
-            fetch('/api/tasks/')
-                .then(response => response.json())
-                .then(data => {
-                    this.tasks = data  
-            });
+            return cookieValue;
         }
-    };
+        const appConfig = {
+            delimiters: ['[[', ']]'],
+            data() {
+                const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : getCookie('csrftoken');
+                return {
+                    csrfToken: csrfToken || '',
+                    tasks: [],
+                    title: '',
+                    description: '',
+                    editingTask: null,
+                    editTitle: '',
+                    editDescription: '',
+                    editImages: [],
+                    newTask: {
+                        title: '',
+                        description: '',
+                        images: []
+                    }
+                };
+            },
+            methods: {
+                createTask() {
+                    try {
+                        const formData = new FormData();
+                        formData.append('title', this.newTask.title);
+                        formData.append('description', this.newTask.description);
+                        formData.append('is_completed', false);
 
-    const app = Vue.createApp(appConfig);
-    app.mount('#app');
+                        for (const imageData of this.newTask.images) {
+                            formData.append('images', imageData);
+                        }
+                        this.sendTaskToServer(formData);
+                    } catch (error) {
+                        console.error('Error in createTask:', error);
+                        alert('An error occurred while creating the task.');
+                    }
+                    },
+                    sendTaskToServer(formData) {
+                    fetch('/api/tasks/create/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': this.csrfToken
+                        },
+                        body: formData
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => { 
+                                throw new Error(err.message || 'Failed to create task');
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        this.tasks.unshift(data); 
+                        this.newTask = { title: '', description: '', images: [] };
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('createTaskModal'));
+                        if (modal) modal.hide();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert(error.message || 'Error creating task');
+                    });
+                },
+                deleteTask(task) {
+                    if (confirm('Are you sure you want to delete this task?')) {
+                        fetch(`/api/tasks/${task.id}/delete/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': this.csrfToken
+                            }
+                        })
+                        .then(() => {
+                            this.tasks = this.tasks.filter(t => t.id !== task.id);
+                        });
+                    }
+                },
+                toggleTask(task) {
+                    fetch(`/api/tasks/${task.id}/toggle/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': this.csrfToken
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        task.is_completed = data.is_completed;
+                    });
+                },
+                openEdit(task) {
+                    this.editingTask = task;
+                    this.editTitle = task.title;
+                    this.editDescription = task.description;
+                    this.editImages = [];
+                    new bootstrap.Modal(document.getElementById('editTaskModal')).show();
+                },
+                updateTask() {
+                    try {
+                        if (this.editImages.length) {
+                            const formData = new FormData();
+                            formData.append('title', this.editTitle);
+                            formData.append('description', this.editDescription);
+
+                            for (const imageData of this.editImages) {
+                                formData.append('images', imageData);
+                            }
+                            this.sendUpdateToServer(formData);
+                        } else {
+                            // Regular JSON update
+                            fetch(`/api/tasks/${this.editingTask.id}/update/`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRFToken': this.csrfToken
+                                },
+                                body: JSON.stringify({
+                                    title: this.editTitle,
+                                    description: this.editDescription
+                                })
+                            })
+                            .then(res => res.json())
+                            .then(data => {
+                                Object.assign(this.editingTask, data.task);
+                                bootstrap.Modal.getInstance(
+                                    document.getElementById('editTaskModal')
+                                ).hide();
+                            });
+                        }
+                    } catch (error) {
+                        console.error('Error in updateTask:', error);
+                        alert('An error occurred while updating the task.');
+                    }
+                },
+                sendUpdateToServer(formData) {
+                    fetch(`/api/tasks/${this.editingTask.id}/update/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': this.csrfToken
+                        },
+                        body: formData
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => {
+                                throw new Error(err.message || 'Failed to update task');
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        Object.assign(this.editingTask, data.task);
+                        bootstrap.Modal.getInstance(
+                            document.getElementById('editTaskModal')
+                        ).hide();
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert(error.message || 'Error updating task');
+                    });
+                },
+                handleImages(event) {
+                    const files = Array.from(event.target.files || []);
+                    if (!files.length) {
+                        this.newTask.images = [];
+                        return;
+                    }
+
+                    Promise.all(
+                        files.map(file => new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = (e) => resolve(e.target.result);
+                            reader.onerror = () => reject(new Error('Failed to read file'));
+                            reader.readAsDataURL(file);
+                        }))
+                    )
+                    .then(images => {
+                        this.newTask.images = images;
+                    })
+                    .catch(error => {
+                        console.error('Error reading images:', error);
+                        alert('Failed to read one of the selected images.');
+                    });
+                },
+                handleEditImages(event) {
+                    const files = Array.from(event.target.files || []);
+                    if (!files.length) {
+                        this.editImages = [];
+                        return;
+                    }
+
+                    Promise.all(
+                        files.map(file => new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = (e) => resolve(e.target.result);
+                            reader.onerror = () => reject(new Error('Failed to read file'));
+                            reader.readAsDataURL(file);
+                        }))
+                    )
+                    .then(images => {
+                        this.editImages = images;
+                    })
+                    .catch(error => {
+                        console.error('Error reading images:', error);
+                        alert('Failed to read one of the selected images.');
+                    });
+                },
+                removeImage() {
+                    if (confirm('Are you sure you want to remove the image?')) {
+                        fetch(`/api/tasks/${this.editingTask.id}/update/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': this.csrfToken
+                            },
+                            body: new URLSearchParams({
+                                'title': this.editTitle,
+                                'description': this.editDescription,
+                                'remove_image': 'true'
+                            })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            Object.assign(this.editingTask, data.task);
+                        });
+                    }
+                }
+            },
+            mounted() {
+                fetch('/api/tasks/')
+                    .then(response => response.json())
+                    .then(data => {
+                        this.tasks = data;
+                    })
+                    .catch(error => {
+                        console.error('Error fetching tasks:', error);
+                    });
+            }
+        };
+
+        const app = Vue.createApp(appConfig);
+        app.mount('#app');
     </script>
 </body>
-</html>
+
+</html> 

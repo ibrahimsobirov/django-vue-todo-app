@@ -3,9 +3,10 @@
 <head>
     <title>Login</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta name="csrf-token" content="{{ csrf_token }}">
 </head>
 <body class="container mt-5">
-    <div class="row justify-content-center">
+    <div id="app" class="row justify-content-center">
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
@@ -17,16 +18,18 @@
                             <div class="alert alert-{{ message.tags }}">{{ message }}</div>
                         {% endfor %}
                     {% endif %}
+                    <div v-if="errorMessage" class="alert alert-danger">[[ errorMessage ]]</div>
+                    <div v-if="successMessage" class="alert alert-success">[[ successMessage ]]</div>
 
-                    <form method="post">
+                    <form @submit.prevent="login">
                         {% csrf_token %}
                         <div class="mb-3">
                             <label class="form-label">Username</label>
-                            <input type="text" name="username" class="form-control" required>
+                            <input v-model="username" type="text" class="form-control" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Password</label>
-                            <input type="password" name="password" class="form-control" required>
+                            <input v-model="password" type="password" class="form-control" required>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Login</button>
                     </form>
@@ -39,4 +42,159 @@
         </div>
     </div>
 </body>
+
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+ <script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const appConfig = {
+        delimiters: ['[[', ']]'],
+
+        data() {
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : getCookie('csrftoken');
+            // #region agent log
+            const csrfFromMeta = csrfMeta ? csrfMeta.getAttribute('content') : null;
+            const csrfFromCookie = getCookie('csrftoken');
+            fetch('http://127.0.0.1:7242/ingest/ccc9e52f-1411-41ad-9c32-9f3dcc62d8b6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'login.html:data()',message:'Vue data() initializing',data:{csrfFromMeta:!!csrfFromMeta,csrfFromCookie:!!csrfFromCookie},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
+            // #endregion
+            return {
+                csrfToken: csrfToken || '',
+                username: '',
+                password: '',
+                errorMessage: '',
+                successMessage: '',
+            }
+        },
+        methods: {
+            login() {
+                this.errorMessage = '';
+                this.successMessage = '';
+                console.log('Login method called', {username: this.username, hasPassword: !!this.password, csrfToken: this.csrfToken ? 'present' : 'missing'});
+                // #region agent log
+                try {
+                    fetch('http://127.0.0.1:7242/ingest/ccc9e52f-1411-41ad-9c32-9f3dcc62d8b6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'login.html:login()',message:'Login method called',data:{username:this.username,passwordLength:this.password.length,csrfTokenLength:this.csrfToken?this.csrfToken.length:0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(err=>console.error('Log error:',err));
+                } catch(e) { console.error('Log error:', e); }
+                // #endregion
+                if (!this.username || !this.password) {
+                    this.errorMessage = 'Please enter both username and password';
+                    return;
+                }
+                if (!this.csrfToken) {
+                    this.errorMessage = 'CSRF token missing. Please refresh the page.';
+                    return;
+                }
+                console.log('Making API call to /login/api/');
+                // #region agent log
+                try {
+                    fetch('http://127.0.0.1:7242/ingest/ccc9e52f-1411-41ad-9c32-9f3dcc62d8b6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'login.html:login()',message:'Before API call',data:{csrfToken:this.csrfToken,csrfTokenValid:this.csrfToken && this.csrfToken !== '[[ csrf_token ]]'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(err=>console.error('Log error:',err));
+                } catch(e) { console.error('Log error:', e); }
+                // #endregion
+                fetch('/login/api/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': this.csrfToken,
+                    },
+                    body: JSON.stringify({
+                        username: this.username,
+                        password: this.password,
+                    }),
+                })
+                .then(response => {
+                    console.log('API response received', {status: response.status, ok: response.ok});
+                    // #region agent log
+                    try {
+                        fetch('http://127.0.0.1:7242/ingest/ccc9e52f-1411-41ad-9c32-9f3dcc62d8b6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'login.html:login().then',message:'API response received',data:{status:response.status,statusText:response.statusText,ok:response.ok},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(err=>console.error('Log error:',err));
+                    } catch(e) { console.error('Log error:', e); }
+                    // #endregion
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            console.error('API error:', err);
+                            this.errorMessage = err.message || 'Login failed';
+                            throw new Error(err.message || 'Login failed');
+                        }).catch(() => {
+                            this.errorMessage = 'Server error. Please try again.';
+                            throw new Error('Server error');
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('API response data:', data);
+                    // #region agent log
+                    try {
+                        fetch('http://127.0.0.1:7242/ingest/ccc9e52f-1411-41ad-9c32-9f3dcc62d8b6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'login.html:login().then.then',message:'API response data',data:data,timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(err=>console.error('Log error:',err));
+                    } catch(e) { console.error('Log error:', e); }
+                    // #endregion
+                    if (data.status === 'success') {
+                        console.log('Login successful, redirecting...');
+                        this.successMessage = 'Login successful! Redirecting...';
+                        // #region agent log
+                        try {
+                            fetch('http://127.0.0.1:7242/ingest/ccc9e52f-1411-41ad-9c32-9f3dcc62d8b6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'login.html:login().then.then',message:'Redirecting after success',data:{redirectingTo:'/'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H5'})}).catch(err=>console.error('Log error:',err));
+                        } catch(e) { console.error('Log error:', e); }
+                        // #endregion
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 500);
+                    }
+                    else {
+                        console.error('Login failed:', data.message);
+                        this.errorMessage = data.message || 'Login failed';
+                        // #region agent log
+                        try {
+                            fetch('http://127.0.0.1:7242/ingest/ccc9e52f-1411-41ad-9c32-9f3dcc62d8b6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'login.html:login().then.then',message:'Login failed',data:{status:data.status,message:data.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(err=>console.error('Log error:',err));
+                        } catch(e) { console.error('Log error:', e); }
+                        // #endregion
+                    }
+                })
+                .catch(error => {
+                    console.error('Login error:', error);
+                    this.errorMessage = error.message || 'An error occurred during login. Please check the console for details.';
+                    // #region agent log
+                    try {
+                        fetch('http://127.0.0.1:7242/ingest/ccc9e52f-1411-41ad-9c32-9f3dcc62d8b6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'login.html:login().catch',message:'Login error caught',data:{error:error.toString(),errorMessage:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(err=>console.error('Log error:',err));
+                    } catch(e) { console.error('Log error:', e); }
+                    // #endregion
+                });
+            }
+
+
+        },
+        mounted() {
+            // #region agent log
+            try {
+                fetch('http://127.0.0.1:7242/ingest/ccc9e52f-1411-41ad-9c32-9f3dcc62d8b6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'login.html:mounted()',message:'Vue app mounted',data:{csrfToken:this.csrfToken,csrfTokenLength:this.csrfToken?this.csrfToken.length:0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(err=>console.error('Log error:',err));
+            } catch(e) {
+                console.error('Mounted log error:', e);
+            }
+            // #endregion
+            console.log('Login Vue app mounted, CSRF token:', this.csrfToken ? 'present' : 'missing');
+        }
+    };
+
+    try {
+        const app = Vue.createApp(appConfig);
+        app.mount('#app');
+        console.log('Vue app mounted successfully');
+    } catch (error) {
+        console.error('Error mounting Vue app:', error);
+        alert('Error initializing application. Please check the console for details.');
+    }
+    </script>
+
 </html>
