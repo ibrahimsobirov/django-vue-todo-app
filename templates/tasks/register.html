@@ -74,11 +74,9 @@
             data() {
                 const csrfMeta = document.querySelector('meta[name="csrf-token"]');
                 const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : getCookie('csrftoken');
-                // #region agent log
                 const csrfFromMeta = csrfMeta ? csrfMeta.getAttribute('content') : null;
                 const csrfFromCookie = getCookie('csrftoken');
                 fetch('http://127.0.0.1:7242/ingest/ccc9e52f-1411-41ad-9c32-9f3dcc62d8b6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'register.html:data()',message:'Vue data() initializing',data:{csrfFromMeta:!!csrfFromMeta,csrfFromCookie:!!csrfFromCookie},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(()=>{});
-                // #endregion
                 return {
                     csrfToken: csrfToken || '',
                     username: '',
@@ -94,11 +92,9 @@
                     this.errorMessage = '';
                     this.successMessage = '';
                     console.log('Register method called', {username: this.username, hasPassword1: !!this.password1, hasPassword2: !!this.password2});
-                    // #region agent log
                     try {
                         fetch('http://127.0.0.1:7242/ingest/ccc9e52f-1411-41ad-9c32-9f3dcc62d8b6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'register.html:register()',message:'Register method called',data:{username:this.username,password1Length:this.password1.length,password2Length:this.password2.length,passwordsMatch:this.password1===this.password2},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H2'})}).catch(err=>console.error('Log error:',err));
                     } catch(e) { console.error('Log error:', e); }
-                    // #endregion
                     if (!this.username || !this.password1 || !this.password2) {
                         this.errorMessage = 'Please fill in all fields';
                         return;
@@ -113,11 +109,9 @@
                     }
                     this.loading = true;
                     console.log('Making API call to /register/api/');
-                    // #region agent log
                     try {
                         fetch('http://127.0.0.1:7242/ingest/ccc9e52f-1411-41ad-9c32-9f3dcc62d8b6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'register.html:register()',message:'Before API call',data:{csrfToken:this.csrfToken,csrfTokenValid:this.csrfToken && this.csrfToken !== '[[ csrf_token ]]'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H3'})}).catch(err=>console.error('Log error:',err));
                     } catch(e) { console.error('Log error:', e); }
-                    // #endregion
                     fetch('/register/api/', {
                         method: 'POST',
                         headers: {
@@ -132,11 +126,9 @@
                     })
                     .then(response => {
                         console.log('API response received', {status: response.status, ok: response.ok});
-                        // #region agent log
                         try {
                             fetch('http://127.0.0.1:7242/ingest/ccc9e52f-1411-41ad-9c32-9f3dcc62d8b6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'register.html:register().then',message:'API response received',data:{status:response.status,statusText:response.statusText,ok:response.ok},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(err=>console.error('Log error:',err));
                         } catch(e) { console.error('Log error:', e); }
-                        // #endregion
                         if (!response.ok) {
                             return response.json().then(err => {
                                 console.error('API error:', err);
@@ -153,53 +145,43 @@
                     })
                     .then(data => {
                         console.log('API response data:', data);
-                        // #region agent log
                         try {
                             fetch('http://127.0.0.1:7242/ingest/ccc9e52f-1411-41ad-9c32-9f3dcc62d8b6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'register.html:register().then.then',message:'API response data',data:data,timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(err=>console.error('Log error:',err));
                         } catch(e) { console.error('Log error:', e); }
-                        // #endregion
                         this.loading = false;
                         if (data.status === 'success') {
                             console.log('Registration successful, redirecting...');
                             this.successMessage = 'Registration successful! Redirecting...';
-                            // #region agent log
                             try {
                                 fetch('http://127.0.0.1:7242/ingest/ccc9e52f-1411-41ad-9c32-9f3dcc62d8b6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'register.html:register().then.then',message:'Redirecting after success',data:{redirectingTo:'/'},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H5'})}).catch(err=>console.error('Log error:',err));
                             } catch(e) { console.error('Log error:', e); }
-                            // #endregion
                             setTimeout(() => {
                                 window.location.href = '/';
                             }, 500);
                         } else {
                             console.error('Registration failed:', data.message);
                             this.errorMessage = data.message || 'Registration failed';
-                            // #region agent log
                             try {
                                 fetch('http://127.0.0.1:7242/ingest/ccc9e52f-1411-41ad-9c32-9f3dcc62d8b6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'register.html:register().then.then',message:'Registration failed',data:{status:data.status,message:data.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(err=>console.error('Log error:',err));
                             } catch(e) { console.error('Log error:', e); }
-                            // #endregion
                         }
                     })
                     .catch(error => {
                         console.error('Registration error:', error);
                         this.loading = false;
                         this.errorMessage = error.message || 'An error occurred during registration. Please check the console for details.';
-                        // #region agent log
                         try {
                             fetch('http://127.0.0.1:7242/ingest/ccc9e52f-1411-41ad-9c32-9f3dcc62d8b6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'register.html:register().catch',message:'Registration error caught',data:{error:error.toString(),errorMessage:error.message},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H4'})}).catch(err=>console.error('Log error:',err));
                         } catch(e) { console.error('Log error:', e); }
-                        // #endregion
                     });
                 }
             },
             mounted() {
-                // #region agent log
                 try {
                     fetch('http://127.0.0.1:7242/ingest/ccc9e52f-1411-41ad-9c32-9f3dcc62d8b6',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'register.html:mounted()',message:'Vue app mounted',data:{csrfToken:this.csrfToken,csrfTokenLength:this.csrfToken?this.csrfToken.length:0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'H1'})}).catch(err=>console.error('Log error:',err));
                 } catch(e) {
                     console.error('Mounted log error:', e);
                 }
-                // #endregion
                 console.log('Register Vue app mounted, CSRF token:', this.csrfToken ? 'present' : 'missing');
             }
         };

@@ -13,7 +13,6 @@ from django.core.files.base import ContentFile
 from django.views.decorators.csrf import csrf_exempt
 import os
 
-# #region agent log helper
 
 
 def debug_log(location, message, data, hypothesis_id='H4'):
@@ -34,9 +33,7 @@ def debug_log(location, message, data, hypothesis_id='H4'):
         with open(log_path, 'a') as f:
             f.write(json_module.dumps(log_data) + '\n')
     except Exception:
-        pass  # Silently fail logging to avoid breaking the app
-# #endregion
-
+        pass 
 
 @login_required
 def list(request):
@@ -67,55 +64,40 @@ def login_view(request):
 
 @csrf_exempt
 def login_api(request):
-    # #region agent log
+    
     debug_log('views.py:login_api()', 'Login API called',
               {'method': request.method}, 'H4')
-    # #endregion
     try:
         if not request.body:
-            # #region agent log
             debug_log('views.py:login_api()', 'Empty request body', {}, 'H4')
-            # #endregion
             return JsonResponse({'status': 'error', 'message': 'Request body is required.'}, status=400)
         data = json.loads(request.body)
-        # #region agent log
         debug_log('views.py:login_api()', 'Request body parsed', {'username': data.get(
             'username', ''), 'hasPassword': bool(data.get('password'))}, 'H4')
-        # #endregion
         username = data.get('username', '').strip()
         password = data.get('password', '')
 
         if not username or not password:
-            # #region agent log
             debug_log('views.py:login_api()', 'Missing username or password', {
                       'hasUsername': bool(username), 'hasPassword': bool(password)}, 'H4')
-            # #endregion
             return JsonResponse({'status': 'error', 'message': 'Username and password are required.'}, status=400)
 
         user = authenticate(request, username=username, password=password)
-        # #region agent log
         debug_log('views.py:login_api()', 'Authentication result', {
                   'userAuthenticated': user is not None, 'userId': user.id if user else None}, 'H4')
-        # #endregion
 
         if user is not None:
             login(request, user)
-            # #region agent log
             debug_log('views.py:login_api()', 'User logged in', {
                       'userId': user.id, 'username': user.username}, 'H5')
-            # #endregion
             return JsonResponse({'status': 'success'})
         else:
-            # #region agent log
             debug_log('views.py:login_api()', 'Authentication failed', {
                       'username': username}, 'H4')
-            # #endregion
             return JsonResponse({'status': 'error', 'message': 'Invalid username or password.'})
     except Exception as e:
-        # #region agent log
         debug_log('views.py:login_api()', 'Login API exception', {
                   'error': str(e), 'errorType': type(e).__name__}, 'H4')
-        # #endregion
         return JsonResponse({'status': 'error', 'message': 'An error occurred during login.'})
 
 
@@ -142,74 +124,51 @@ def register_view(request):
 
 @csrf_exempt
 def register_api(request):
-    # #region agent log
     debug_log('views.py:register_api()', 'Register API called',
               {'method': request.method}, 'H4')
-    # #endregion
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            # #region agent log
             debug_log('views.py:register_api()', 'Request body parsed', {'username': data.get(
                 'username', ''), 'hasPassword1': bool(data.get('password1')), 'hasPassword2': bool(data.get('password2'))}, 'H4')
-            # #endregion
             username = data.get('username', '').strip()
             password1 = data.get('password1', '').strip()
             password2 = data.get('password2', '').strip()
 
-            # Basic validation
             if not username:
-                # #region agent log
                 debug_log('views.py:register_api()',
                           'Validation failed: username empty', {}, 'H4')
-                # #endregion
                 return JsonResponse({'status': 'error', 'message': 'Username is required.'})
             if not password1:
-                # #region agent log
                 debug_log('views.py:register_api()',
                           'Validation failed: password empty', {}, 'H4')
-                # #endregion
                 return JsonResponse({'status': 'error', 'message': 'Password is required.'})
             if password1 != password2:
-                # #region agent log
                 debug_log('views.py:register_api()',
                           'Validation failed: passwords do not match', {}, 'H4')
-                # #endregion
                 return JsonResponse({'status': 'error', 'message': 'Passwords do not match.'})
 
-            # Check if user already exists
             if User.objects.filter(username=username).exists():
-                # #region agent log
                 debug_log('views.py:register_api()', 'Validation failed: username exists', {
                           'username': username}, 'H4')
-                # #endregion
                 return JsonResponse({'status': 'error', 'message': 'Username already exists.'})
 
-            # Create user
             user = User.objects.create_user(
                 username=username, password=password1)
-            # #region agent log
             debug_log('views.py:register_api()', 'User created', {
                       'userId': user.id, 'username': user.username}, 'H4')
-            # #endregion
             login(request, user)
-            # #region agent log
             debug_log('views.py:register_api()', 'User logged in after registration', {
                       'userId': user.id}, 'H5')
-            # #endregion
             return JsonResponse({'status': 'success', 'message': 'Registration successful!'})
 
         except json.JSONDecodeError as e:
-            # #region agent log
             debug_log('views.py:register_api()',
                       'JSON decode error', {'error': str(e)}, 'H4')
-            # #endregion
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON data.'})
         except Exception as e:
-            # #region agent log
             debug_log('views.py:register_api()', 'Register API exception', {
                       'error': str(e), 'errorType': type(e).__name__}, 'H4')
-            # #endregion
             return JsonResponse({'status': 'error', 'message': 'Registration failed.'})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'})
@@ -282,21 +241,18 @@ def api_task_update(request, task_id):
 
     task = get_object_or_404(Task, id=task_id)
 
-    # Handle both JSON and form data (for image uploads)
     if request.content_type == 'application/json':
         data = json.loads(request.body)
         task.title = data.get('title', task.title)
         task.description = data.get('description', task.description)
         task.save()
     else:
-        # Handle form data with potential image upload
         task.title = request.POST.get('title', task.title).strip()
         task.description = request.POST.get(
             'description', task.description).strip()
 
         images_data = request.POST.getlist('images')
 
-        # Handle image update
         image_data = request.POST.get('image')
 
         if images_data:
@@ -333,7 +289,7 @@ def api_task_update(request, task_id):
 
                 data = ContentFile(base64.b64decode(imgstr), name=filename)
                 task.image.save(filename, data, save=True)
-            elif image_data == '':  # Empty string means remove image
+            elif image_data == '':  
                 if task.image:
                     task.image.delete()
         elif request.POST.get('remove_image') == 'true':

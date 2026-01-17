@@ -12,17 +12,14 @@ class Task(models.Model):
     is_completed = models.BooleanField(default=False)
 
     def __str__(self):
-        # Displays the task title in the Django Admin
         return self.title
 
     def delete(self, *args, **kwargs):
-        # Delete the associated image file when task is deleted
         if self.image:
             self.image.delete(save=False)
         super().delete(*args, **kwargs)
 
     class Meta:
-        # Orders tasks by creation date (newest first)
         ordering = ['-created_at']
 
 

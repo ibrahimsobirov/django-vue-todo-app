@@ -33,7 +33,7 @@
         <span class="me-3">{{ user.username }}</span>
         <a href="{% url 'logout' %}" class="btn btn-outline-secondary btn-sm">Logout</a>
     </div>
-    
+
     {% endif %}
 
     <div id="app" class="container">
@@ -285,7 +285,6 @@
                             }
                             this.sendUpdateToServer(formData);
                         } else {
-                            // Regular JSON update
                             fetch(`/api/tasks/${this.editingTask.id}/update/`, {
                                 method: 'POST',
                                 headers: {
